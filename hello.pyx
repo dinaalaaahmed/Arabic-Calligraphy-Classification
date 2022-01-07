@@ -6,6 +6,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 import cv2
 import os
+import time
+
 from skimage import io
 from skimage.filters import threshold_otsu
 from skimage.segmentation import  flood_fill
@@ -23,6 +25,10 @@ from skimage.transform import hough_line, hough_line_peaks, rotate
 import joblib
 
 import numpy as np
+
+
+
+# %%
 # Show the figures / plots inside the notebook
 def show_images(images,titles=None):
     #This function is used to show image(s) with titles by sending an array of images and an array of associated titles.
@@ -41,7 +47,6 @@ def show_images(images,titles=None):
         n += 1
     fig.set_size_inches(np.array(fig.get_size_inches()) * n_ims)
     plt.show() 
-
 
 
 # %%
@@ -87,17 +92,6 @@ def extract_hog_features(img):
     return fd
 
 # %%
-####### return hog features from arr of images ###########
-def feature_extraction_hog(images):
-    feature = []
-    for img in images:
-        img = img.astype('uint8')
-        img = cv2.resize(img, (64, 64), cv2.INTER_AREA)
-        featuresHog = extract_hog_features(img.astype('uint8'))
-        feature.append(featuresHog)
-    return feature
-
-# %%
 ######## binarize image ##########
 def local_binarize(img, block_size = 35, offset_val = 10):
     img=img_as_ubyte(img)
@@ -129,29 +123,6 @@ def load_images_from_folder(folders):
                 y.append(i)
         i+=1
     return images, y
-
-# %%
-############### function that extracts hog features from dataset ###################
-def process_Hog():    
-    features = feature_extraction_hog(images)
-    return features, y
-
-# %%
-import glob
-x=[]
-x = glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\1\\*")
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\2\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\3\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\4\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\5\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\6\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\7\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\8\\*"))
-x.extend(glob.glob("F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\9\\*"))
-# images, y = load_images_from_folder(["F:\Downloads\ACdata_base\\5","F:\Downloads\ACdata_base\\8","F:\Downloads\ACdata_base\\9", "F:\Downloads\ACdata_base\\3"])
-images, y = load_images_from_folder(["F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\1","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\2","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\3","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\4","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\5","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\6","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\7","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\8","F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\9"])
-# images, y = load_images_from_folder(["F:\\GitHub\\Arabic-Calligraphy-Classification\ACdata_base\\1"])
-
 
 # %%
 ######### Horizontal profile projection ###########
@@ -407,46 +378,58 @@ def process_LVL_HVSL(x):
     bw_up=np.histogram(black_white_up)
     bw_down=np.histogram(black_white_down)
     # return 
-    return featuresLVL,featuresHVSL, HPP_features, featuresToS, featuresToE,featuresThickness, HOG,black_white,black_white_up,black_white_down,d_up,d_down,m_rect,y
+    return featuresLVL,featuresHVSL, HPP_features, featuresToS, featuresToE,featuresThickness, HOG,black_white,black_white_up,black_white_down,d_up,d_down,m_rect
 
 # %%
 
 ################ demo test for LVL extraction from dataset using Decision Trees
-def main():
-    XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect,y = process_LVL_HVSL(x)
-
-    ################ demo test for hog extraction from dataset using support vector machine
-    X_train, X_test, y_train, y_test = model_selection.train_test_split(HOG, y, test_size=0.2, random_state=1)
-    X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=0.25, random_state=1) # 0.25 x 0.8 = 0.2
-    poly = svm.SVC(kernel='rbf', degree=3, C=5).fit(X_train, y_train)
-    poly_pred = poly.predict(X_test)
-    poly_accuracy = accuracy_score(y_test, poly_pred)
-    poly_f1 = f1_score(y_test, poly_pred, average='weighted')
-    print('Accuracy (Polynomial Kernel): ', "%.2f" % (poly_accuracy*100))
-    print('F1 (Polynomial Kernel): ', "%.2f" % (poly_f1*100))
-
+def main(x, y):
+    XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL(x)
     X = np.hstack((XLVL, XHVSL, HPP_features, featuresToE, featuresThickness,HOG,bw,bw_up,d_up, d_down,m_rect))
 
-    voting_clf = RandomForestClassifier(max_depth=20, random_state=0)
+    model = RandomForestClassifier(max_depth=20, random_state=0)
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=1)
     X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=0.2, random_state=1) # 0.25 x 0.8 = 0.2
-    eclf1 = voting_clf.fit(X_train, y_train)
+    fitted_model = model.fit(X_train, y_train)
+    predict_model = fitted_model.predict(X_test)
+    model_accuracy = accuracy_score(y_test, predict_model)
+    print('Accuracy (Polynomial Kernel): ', "%.2f" % (model_accuracy*100))
     filename = "randomForest.joblib"
-    joblib.dump(eclf1, filename)
+    joblib.dump(fitted_model, filename)
+
 
 
 # %%
+import time
+import glob
 
 def predection(folder):
+    # x=[]
+    # x = glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\1\\*")
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\2\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\3\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\4\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\5\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\6\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\7\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\8\\*"))
+    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\9\\*"))
+    # _, y = load_images_from_folder(["C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\1","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\2","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\3","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\4","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\5","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\6","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\7","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\8","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\9"])
+    # main(x, y)
     eclf1 = joblib.load("randomForest.joblib")
     f = open("results.txt", "w")
+    t = open("times.txt", "w")
     for filename in os.listdir(folder):
-        print(filename)
-        XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect,y = process_LVL_HVSL([os.path.join(folder,filename)])
+        start = time.time()
+        XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect, y = process_LVL_HVSL([os.path.join(folder,filename)])
         features = np.hstack((XLVL, XHVSL, HPP_features, featuresToE, featuresThickness,HOG,bw,bw_up,d_up, d_down,m_rect))
         poly_pred = eclf1.predict(features)
+        end = time.time()
         f.write(str(poly_pred[0]))
+        print(str(poly_pred[0])+"\n")
         f.write("\n")
+        t.write(str(round((end - start), 2)))
+        t.write("\n")
     f.close()
 
 # %%

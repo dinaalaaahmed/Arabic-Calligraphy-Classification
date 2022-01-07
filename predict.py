@@ -76,7 +76,7 @@ def local_binarize(img, block_size = 35, offset_val = 10):
     return b_img    
 
 # %%
-####### function that returns the row of the text basline #######
+####### function that returns the row of the basline #######
 def baseline(img):
     horizontal_projection = np.sum(img, axis=1)
     return np.argmax(horizontal_projection)
@@ -224,7 +224,7 @@ def min_rect(img):
     return avg_angle
 
 # %%
-######### takes binary image and returns skeleton, edge
+######### takes binary image and returns skeleton image, edge image
 def processing_images(binary_img):
     bw_img=binary_img
     sobel_img = sobel(bw_img)
@@ -250,7 +250,6 @@ def HVSL(bw_image):
 
 
 # %%
-################### 1st feature ##################
 def HVSL_features(edge):
     vertical_lines, horizontal_lines, lines = HVSL(edge)
     if(vertical_lines+horizontal_lines) == 0:
@@ -310,7 +309,7 @@ def text_thickness(edge_img, skeleton_img):
 
 
 # %%
-############### function that extracts hog features from dataset ###################
+############### function that extracts all features from dataset ###################
 def process_LVL_HVSL(x):
     featuresLVL =[]
     featuresHVSL=[]
@@ -350,8 +349,6 @@ def process_LVL_HVSL(x):
     return featuresLVL,featuresHVSL, HPP_features, featuresToS, featuresToE,featuresThickness, HOG,black_white,black_white_up,black_white_down,d_up,d_down,m_rect
 
 # %%
-
-################ demo test for LVL extraction from dataset using Decision Trees
 def extract_feature(x):
     XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL(x)
     return XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect 
@@ -376,7 +373,6 @@ def extract_feature(x):
 
 # probabiliy = None
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(XLVL, y, test_size=0.2, random_state=1)
-
 # XLVL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # probabiliy = XLVL_classifier.predict_proba(X_test)
 
@@ -405,13 +401,9 @@ def extract_feature(x):
 # # d_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # # probabiliy += d_down_classifier.predict_proba(X_test)
 
-# ##########################################################
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(HPP_features, y, test_size=0.2, random_state=1)
 # HPP_features_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # probabiliy += HPP_features_classifier.predict_proba(X_test)
-
-
-# #(XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect)
 
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresThickness, y, test_size=0.2, random_state=1)
 # featuresThickness_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
@@ -433,7 +425,7 @@ def extract_feature(x):
 # # bw_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # # probabiliy += bw_down_classifier.predict_proba(X_test)
 
-#         # +HOG_classifier.predict_proba(HOG)
+# +HOG_classifier.predict_proba(HOG)
 
 # XHVSL_file_name = "XHVSL.joblib"
 # XLVL_file_name = "XLVL.joblib"

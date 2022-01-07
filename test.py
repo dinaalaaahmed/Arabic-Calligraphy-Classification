@@ -1,2 +1,2 @@
 import hello
-hello.main()
+hello.predection("C:\\Users\\ok\\Downloads\\Project Submission\\Project Submission\\test")

@@ -20,6 +20,7 @@ import math
 from matplotlib.pyplot import bar
 import matplotlib.pyplot as plt
 from skimage.transform import hough_line, hough_line_peaks, rotate
+import joblib
 
 import numpy as np
 # Show the figures / plots inside the notebook
@@ -430,29 +431,22 @@ def main():
     X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y, test_size=0.2, random_state=1)
     X_train, X_val, y_train, y_val = model_selection.train_test_split(X_train, y_train, test_size=0.2, random_state=1) # 0.25 x 0.8 = 0.2
     eclf1 = voting_clf.fit(X_train, y_train)
-    poly_pred = eclf1.predict(X_test)
-    poly_accuracy = accuracy_score(y_test, poly_pred)
-    poly_f1 = f1_score(y_test, poly_pred, average='weighted')
-    print('Accuracy (Polynomial Kernel): ', "%.2f" % (poly_accuracy*100))
-    print('F1 (Polynomial Kernel): ', "%.2f" % (poly_f1*100))
-
-    poly_pred = eclf1.predict(X_val)
-    poly_accuracy = accuracy_score(y_val, poly_pred)
-    poly_f1 = f1_score(y_val, poly_pred, average='weighted')
-    print('Accuracy (Polynomial Kernel): ', "%.2f" % (poly_accuracy*100))
-    print('F1 (Polynomial Kernel): ', "%.2f" % (poly_f1*100))
+    filename = "randomForest.joblib"
+    joblib.dump(eclf1, filename)
 
 
 # %%
-main()
+
 def predection(folder):
-    f = open("results.txt", "a")
+    eclf1 = joblib.load("randomForest.joblib")
+    f = open("results.txt", "w")
     for filename in os.listdir(folder):
         print(filename)
-        XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect,y = process_LVL_HVSL([filename])
+        XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect,y = process_LVL_HVSL([os.path.join(folder,filename)])
         features = np.hstack((XLVL, XHVSL, HPP_features, featuresToE, featuresThickness,HOG,bw,bw_up,d_up, d_down,m_rect))
         poly_pred = eclf1.predict(features)
-        f.write(poly_pred)
+        f.write(str(poly_pred[0]))
+        f.write("\n")
     f.close()
 
 # %%

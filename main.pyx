@@ -25,29 +25,6 @@ import glob
 import joblib
 
 
-
-
-# %%
-# Show the figures / plots inside the notebook
-def show_images(images,titles=None):
-    #This function is used to show image(s) with titles by sending an array of images and an array of associated titles.
-    # images[0] will be drawn with the title titles[0] if exists
-    # You aren't required to understand this function, use it as-is.
-    n_ims = len(images)
-    if titles is None: titles = ['(%d)' % i for i in range(1,n_ims + 1)]
-    fig = plt.figure()
-    n = 1
-    for image,title in zip(images,titles):
-        a = fig.add_subplot(1,n_ims,n)
-        if image.ndim == 2: 
-            plt.gray()
-        plt.imshow(image)
-        a.set_title(title)
-        n += 1
-    fig.set_size_inches(np.array(fig.get_size_inches()) * n_ims)
-    plt.show() 
-
-
 # %%
 # Show the figures / plots inside the notebook
 def show_images(images,titles=None):
@@ -98,7 +75,7 @@ def local_binarize(img, block_size = 35, offset_val = 10):
     return b_img    
 
 # %%
-####### function that returns the row of the text basline #######
+####### function that returns the row of the basline #######
 def baseline(img):
     horizontal_projection = np.sum(img, axis=1)
     return np.argmax(horizontal_projection)
@@ -273,7 +250,6 @@ def HVSL(bw_image):
 
 
 # %%
-################### 1st feature ##################
 def HVSL_features(edge):
     vertical_lines, horizontal_lines, lines = HVSL(edge)
     if(vertical_lines+horizontal_lines) == 0:
@@ -333,7 +309,7 @@ def text_thickness(edge_img, skeleton_img):
 
 
 # %%
-############### function that extracts hog features from dataset ###################
+############### function that extracts all features from dataset ###################
 def process_LVL_HVSL(x):
     featuresLVL =[]
     featuresHVSL=[]
@@ -374,7 +350,6 @@ def process_LVL_HVSL(x):
 
 # %%
 
-################ demo test for LVL extraction from dataset using Decision Trees
 def main(x):
     XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL(x)
     return XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect 
@@ -383,9 +358,6 @@ def main(x):
 
 
 # %%
-
-#     #Initializing the MLPClassifier
-
 #     # model =   # x=[]
 # x = glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\1\\*")
 
@@ -402,15 +374,10 @@ def main(x):
 
 # XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect  = main(x)
 
-
-
-#     # 1,6,2,3
-
 # %%
 
 # probabiliy = None
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(XLVL, y, test_size=0.2, random_state=1)
-
 # XLVL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # probabiliy = XLVL_classifier.predict_proba(X_test)
 
@@ -439,13 +406,9 @@ def main(x):
 # # d_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # # probabiliy += d_down_classifier.predict_proba(X_test)
 
-# ##########################################################
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(HPP_features, y, test_size=0.2, random_state=1)
 # HPP_features_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # probabiliy += HPP_features_classifier.predict_proba(X_test)
-
-
-# #(XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect)
 
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresThickness, y, test_size=0.2, random_state=1)
 # featuresThickness_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
@@ -467,7 +430,7 @@ def main(x):
 # # bw_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
 # # probabiliy += bw_down_classifier.predict_proba(X_test)
 
-#         # +HOG_classifier.predict_proba(HOG)
+#  # +HOG_classifier.predict_proba(HOG)
 
 # XHVSL_file_name = "XHVSL.joblib"
 # XLVL_file_name = "XLVL.joblib"

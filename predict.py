@@ -348,109 +348,101 @@ def process_LVL_HVSL(x):
         m_rect.append([min_rect(bw_img)])
     return featuresLVL,featuresHVSL, HPP_features, featuresToS, featuresToE,featuresThickness, HOG,black_white,black_white_up,black_white_down,d_up,d_down,m_rect
 
+def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, y):
+    probabiliy = None
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(XLVL, y, test_size=0.2, random_state=1)
+    XLVL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy = XLVL_classifier.predict_proba(X_test)
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(XHVSL, y, test_size=0.2, random_state=1)
+    XHVSL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += XHVSL_classifier.predict_proba(X_test)
+
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresToS, y, test_size=0.2, random_state=1)
+    featuresToS_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += featuresToS_classifier.predict_proba(X_test)
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresToE, y, test_size=0.2, random_state=1)
+    featuresToE_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += featuresToE_classifier.predict_proba(X_test)
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(m_rect, y, test_size=0.2, random_state=1)
+    m_rect_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += m_rect_classifier.predict_proba(X_test)
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(HPP_features, y, test_size=0.2, random_state=1)
+    HPP_features_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += HPP_features_classifier.predict_proba(X_test)
+
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresThickness, y, test_size=0.2, random_state=1)
+    featuresThickness_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += featuresThickness_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(HOG, y, test_size=0.2, random_state=1)
+    # HOG_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += HOG_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw, y, test_size=0.2, random_state=1)
+    # bw_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += bw_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw_up, y, test_size=0.2, random_state=1)
+    # bw_up_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += bw_up_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw_down, y, test_size=0.2, random_state=1)
+    # bw_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += bw_down_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(d_up, y, test_size=0.2, random_state=1)
+    # d_up_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += d_up_classifier.predict_proba(X_test)
+
+    # X_train, X_test, y_train, y_test = model_selection.train_test_split(d_down, y, test_size=0.2, random_state=1)
+    # d_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    # probabiliy += d_down_classifier.predict_proba(X_test)
+
+    XHVSL_file_name = "models/XHVSL.joblib"
+    XLVL_file_name = "models/XLVL.joblib"
+    featuresToS_file_name = "models/featuresToS.joblib"
+    featuresToE_file_name = "models/featuresToE.joblib"
+    featuresThickness_file_name = "models/featuresThickness.joblib"
+    m_rect_file_name = "models/m_rect.joblib"
+    hpp_file_name = "models/hpp.joblib"
+    joblib.dump(XHVSL_classifier, XHVSL_file_name)
+    joblib.dump(XLVL_classifier, XLVL_file_name)
+    joblib.dump(featuresToE_classifier, featuresToE_file_name)
+    joblib.dump(featuresToS_classifier, featuresToS_file_name)
+    joblib.dump(featuresThickness_classifier, featuresThickness_file_name)
+    joblib.dump(XHVSL_classifier, XHVSL_file_name)
+    joblib.dump(m_rect_classifier, m_rect_file_name)
+    joblib.dump(HPP_features_classifier, hpp_file_name)
+
+
+    probabiliy_test = np.argmax(probabiliy, axis=1)+1
+    clf_accuracy = accuracy_score(y_test, probabiliy_test)
+    print('Accuracy (model): ', "%.2f" % (clf_accuracy*100))
+
 # %%
-def extract_feature(x):
+def extract_feature(x, y):
     XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL(x)
-    return XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect 
-     
-
-
+    train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, y)
+    
 
 #### read data set
-# def read_data_set():
-    # x = glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\1\\*")
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\2\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\3\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\4\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\5\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\6\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\7\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\8\\*"))
-    # x.extend(glob.glob("C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\9\\*"))
-    # _, y = load_images_from_folder(["C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\1","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\2","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\3","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\4","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\5","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\6","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\7","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\8","C:\\Users\\ok\\Downloads\\ACDB\\ACdata_base\\9"])
-    # XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect  = extract_feature(x)
-
-
-# probabiliy = None
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(XLVL, y, test_size=0.2, random_state=1)
-# XLVL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy = XLVL_classifier.predict_proba(X_test)
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(XHVSL, y, test_size=0.2, random_state=1)
-# XHVSL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += XHVSL_classifier.predict_proba(X_test)
-
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresToS, y, test_size=0.2, random_state=1)
-# featuresToS_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += featuresToS_classifier.predict_proba(X_test)
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresToE, y, test_size=0.2, random_state=1)
-# featuresToE_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += featuresToE_classifier.predict_proba(X_test)
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(m_rect, y, test_size=0.2, random_state=1)
-# m_rect_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += m_rect_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(d_up, y, test_size=0.2, random_state=1)
-# # d_up_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += d_up_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(d_down, y, test_size=0.2, random_state=1)
-# # d_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += d_down_classifier.predict_proba(X_test)
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(HPP_features, y, test_size=0.2, random_state=1)
-# HPP_features_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += HPP_features_classifier.predict_proba(X_test)
-
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(featuresThickness, y, test_size=0.2, random_state=1)
-# featuresThickness_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# probabiliy += featuresThickness_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(HOG, y, test_size=0.2, random_state=1)
-# # HOG_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += HOG_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw, y, test_size=0.2, random_state=1)
-# # bw_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += bw_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw_up, y, test_size=0.2, random_state=1)
-# # bw_up_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += bw_up_classifier.predict_proba(X_test)
-
-# # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw_down, y, test_size=0.2, random_state=1)
-# # bw_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-# # probabiliy += bw_down_classifier.predict_proba(X_test)
-
-# +HOG_classifier.predict_proba(HOG)
-
-# XHVSL_file_name = "XHVSL.joblib"
-# XLVL_file_name = "XLVL.joblib"
-# featuresToS_file_name = "featuresToS.joblib"
-# featuresToE_file_name = "featuresToE.joblib"
-# HPP_features_file_name = "HPP_features.joblib"
-# featuresThickness_file_name = "featuresThickness.joblib"
-# m_rect_file_name = "m_rect.joblib"
-# hpp_file_name = "hpp.joblib"
-# joblib.dump(XHVSL_classifier, XHVSL_file_name)
-# joblib.dump(XLVL_classifier, XLVL_file_name)
-# joblib.dump(featuresToE_classifier, featuresToE_file_name)
-# joblib.dump(featuresToS_classifier, featuresToS_file_name)
-# joblib.dump(featuresThickness_classifier, featuresThickness_file_name)
-# joblib.dump(XHVSL_classifier, XHVSL_file_name)
-# joblib.dump(m_rect_classifier, m_rect_file_name)
-# joblib.dump(HPP_features_classifier, hpp_file_name)
-
-
-# probabiliy_test = np.argmax(probabiliy, axis=1)+1
-# clf_accuracy = accuracy_score(y_test, probabiliy_test)
-# print('Accuracy (model): ', "%.2f" % (clf_accuracy*100))
+def read_data_set(path):
+    x = []
+    y = []
+    for i in range(1,10):
+        x.extend(glob.glob(path + '\\' + str(i) + '\\*'))
+        y.extend([i] * len(os.listdir(path + '\\' + str(i) + '\\*')))
+    extract_feature(x, y)
 
 
 def predection(folder, output):
+    # if you want to read the data set and train it, put the path of the data set in your pc
+    # read_data_set("D:\\4th year\\1st semester\\pattern recognition\\project\\ACdata_base")
     result_file = open(os.path.join(output, "results.txt"), 'w+')
     result_text=""
     time_file = open(os.path.join(output, "times.txt"), 'w+')
@@ -458,13 +450,13 @@ def predection(folder, output):
     for filename in os.listdir(folder):
         try:
             start = time.time()
-            XHVSL_model = joblib.load("XHVSL.joblib") 
-            XLVL_model = joblib.load("XLVL.joblib")
-            featuresToS_model = joblib.load("featuresToS.joblib")
-            featuresToE_model = joblib.load("featuresToE.joblib")
-            HPP_features_model = joblib.load("hpp.joblib")
-            featuresThickness_model = joblib.load("featuresThickness.joblib")
-            m_rect_model = joblib.load("m_rect.joblib")
+            XHVSL_model = joblib.load("models/XHVSL.joblib") 
+            XLVL_model = joblib.load("models/XLVL.joblib")
+            featuresToS_model = joblib.load("models/featuresToS.joblib")
+            featuresToE_model = joblib.load("models/featuresToE.joblib")
+            HPP_features_model = joblib.load("models/hpp.joblib")
+            featuresThickness_model = joblib.load("models/featuresThickness.joblib")
+            m_rect_model = joblib.load("models/m_rect.joblib")
             probabiliy = 0
             XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL([os.path.join(folder,filename)])
             probabiliy += XLVL_model.predict_proba(XLVL)+XHVSL_model.predict_proba(XHVSL)+HPP_features_model.predict_proba(HPP_features)+featuresToS_model.predict_proba(featuresToS)+featuresToE_model.predict_proba(featuresToE)

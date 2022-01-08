@@ -50,15 +50,15 @@ def show_images(images,titles=None):
 
 # %%
 def auto_crop(binary_image: np.ndarray) -> np.ndarray:
-    all_points = cv2.findNonZero(binary_image)
-    x, y, w, h = cv2.boundingRect(all_points)
-    height, width = binary_image.shape
+    nonZeroPoints = cv2.findNonZero(binary_image)
+    c1, c2, width, height = cv2.boundingRect(nonZeroPoints)
     border = 0
-    left = max(0, x - border)
-    right = min(width, x + w + border)
-    top = max(0, y - border)
-    bottom = min(height, y + h + border)
-    return binary_image[top:bottom, left:right], top, bottom
+    H, W = binary_image.shape
+    L = max(0, c1 - border)
+    R = min(W, c1 + width + border)
+    T = max(0, c2 - border)
+    B  = min(H, c2 + height + border)
+    return T, B
 
 
 # %%
@@ -268,7 +268,7 @@ def text_height_feature(skeleton):
     line = cv2.morphologyEx(skeleton, cv2.MORPH_OPEN, kernel_vertical_line)
     line=line/255
     num_of_verticle_lines, max_vertical_line_height, variance = count_contour(line,3*1)
-    _, start_height, end_height  = auto_crop(skeleton)
+    start_height, end_height  = auto_crop(skeleton)
     text_height = abs(start_height-end_height)
     return text_height, num_of_verticle_lines, max_vertical_line_height, text_height/max_vertical_line_height , variance
 
@@ -326,7 +326,6 @@ def process_LVL_HVSL(x):
     m_rect=[]
     for _, path in enumerate(x):
         img = io.imread(path, 1)
-        # HOG.append(extract_hog_features(img))
         bw_img=local_binarize(img)
         edge, skeleton = processing_images(bw_img)
         featuresLVL.append(text_height_feature(skeleton))
@@ -340,16 +339,17 @@ def process_LVL_HVSL(x):
         edge = img_as_ubyte(edge)
         featuresToS.append(extract_hog_features(skeleton))
         featuresToE.append(extract_hog_features(edge))
+        m_rect.append([min_rect(bw_img)])
+        HOG.append(extract_hog_features(img))
         # black_white.append(black_white_ratio(bw_img))
         # black_white_up.append(black_white_ratio_up(bw_img))
         # black_white_down.append(black_white_ratio_down(bw_img))
         # d_up.append(density_up(bw_img,3))
         # d_down.append(density_down(bw_img,3))
-        m_rect.append([min_rect(bw_img)])
     return featuresLVL,featuresHVSL, HPP_features, featuresToS, featuresToE,featuresThickness, HOG,black_white,black_white_up,black_white_down,d_up,d_down,m_rect
 
-def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, y):
-    probabiliy = None
+def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, HOG, y):
+    
     X_train, X_test, y_train, y_test = model_selection.train_test_split(XLVL, y, test_size=0.2, random_state=1)
     XLVL_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
     probabiliy = XLVL_classifier.predict_proba(X_test)
@@ -379,9 +379,9 @@ def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, fe
     featuresThickness_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
     probabiliy += featuresThickness_classifier.predict_proba(X_test)
 
-    # X_train, X_test, y_train, y_test = model_selection.train_test_split(HOG, y, test_size=0.2, random_state=1)
-    # HOG_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
-    # probabiliy += HOG_classifier.predict_proba(X_test)
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(HOG, y, test_size=0.2, random_state=1)
+    HOG_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
+    probabiliy += HOG_classifier.predict_proba(X_test)
 
     # X_train, X_test, y_train, y_test = model_selection.train_test_split(bw, y, test_size=0.2, random_state=1)
     # bw_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
@@ -403,21 +403,34 @@ def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, fe
     # d_down_classifier = svm.SVC(kernel='rbf', degree=3, C=5, probability=True).fit(X_train, y_train)
     # probabiliy += d_down_classifier.predict_proba(X_test)
 
-    XHVSL_file_name = "models/XHVSL.joblib"
-    XLVL_file_name = "models/XLVL.joblib"
-    featuresToS_file_name = "models/featuresToS.joblib"
-    featuresToE_file_name = "models/featuresToE.joblib"
-    featuresThickness_file_name = "models/featuresThickness.joblib"
-    m_rect_file_name = "models/m_rect.joblib"
-    hpp_file_name = "models/hpp.joblib"
-    joblib.dump(XHVSL_classifier, XHVSL_file_name)
-    joblib.dump(XLVL_classifier, XLVL_file_name)
-    joblib.dump(featuresToE_classifier, featuresToE_file_name)
-    joblib.dump(featuresToS_classifier, featuresToS_file_name)
-    joblib.dump(featuresThickness_classifier, featuresThickness_file_name)
-    joblib.dump(XHVSL_classifier, XHVSL_file_name)
-    joblib.dump(m_rect_classifier, m_rect_file_name)
-    joblib.dump(HPP_features_classifier, hpp_file_name)
+
+    # XHVSL_file_name = "models/XHVSL.joblib"
+    # XLVL_file_name = "models/XLVL.joblib"
+    # featuresToS_file_name = "models/featuresToS.joblib"
+    # featuresToE_file_name = "models/featuresToE.joblib"
+    # featuresThickness_file_name = "models/featuresThickness.joblib"
+    # m_rect_file_name = "models/m_rect.joblib"
+    # hpp_file_name = "models/hpp.joblib"
+    # HOG_file_name = "models/HOG.joblib"
+    # bw_file_name = "models/bw.joblib"
+    # bw_up_file_name = "models/bw_up.joblib"
+    # bw_down_file_name = "models/bw_down.joblib"
+    # d_up_file_name = "models/d_up.joblib"
+    # d_down_file_name = "models/d_down.joblib"
+    # joblib.dump(XHVSL_classifier, XHVSL_file_name)
+    # joblib.dump(XLVL_classifier, XLVL_file_name)
+    # joblib.dump(featuresToE_classifier, featuresToE_file_name)
+    # joblib.dump(featuresToS_classifier, featuresToS_file_name)
+    # joblib.dump(featuresThickness_classifier, featuresThickness_file_name)
+    # joblib.dump(XHVSL_classifier, XHVSL_file_name)
+    # joblib.dump(m_rect_classifier, m_rect_file_name)
+    # joblib.dump(HPP_features_classifier, hpp_file_name)
+    # joblib.dump(HOG_classifier, HOG_file_name)
+    # joblib.dump(bw_classifier, bw_file_name)
+    # joblib.dump(bw_up_classifier, bw_up_file_name)
+    # joblib.dump(bw_down_classifier, bw_down_file_name)
+    # joblib.dump(d_down_classifier, d_up_file_name)
+    # joblib.dump(d_down_classifier, d_down_file_name)
 
 
     probabiliy_test = np.argmax(probabiliy, axis=1)+1
@@ -427,7 +440,7 @@ def train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, fe
 # %%
 def extract_feature(x, y):
     XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL(x)
-    train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, y)
+    train_models(XLVL, XHVSL, featuresToS, featuresToE, m_rect, HPP_features, featuresThickness, HOG, y)
     
 
 #### read data set
@@ -457,10 +470,19 @@ def predection(folder, output):
             HPP_features_model = joblib.load("models/hpp.joblib")
             featuresThickness_model = joblib.load("models/featuresThickness.joblib")
             m_rect_model = joblib.load("models/m_rect.joblib")
+            HOG_model = joblib.load("models/HOG.joblib")
+            # bw_model = joblib.load("models/bw.joblib")
+            # bw_up_model = joblib.load("models/bw_up.joblib")
+            # bw_down_model = joblib.load("models/bw_down.joblib")
+            # d_up_model = joblib.load("models/d_up.joblib")
+            # d_down_model = joblib.load("models/d_down.joblib")
+
             probabiliy = 0
             XLVL, XHVSL, HPP_features, featuresToS, featuresToE, featuresThickness, HOG,bw,bw_up,bw_down,d_up,d_down,m_rect = process_LVL_HVSL([os.path.join(folder,filename)])
             probabiliy += XLVL_model.predict_proba(XLVL)+XHVSL_model.predict_proba(XHVSL)+HPP_features_model.predict_proba(HPP_features)+featuresToS_model.predict_proba(featuresToS)+featuresToE_model.predict_proba(featuresToE)
             probabiliy += featuresThickness_model.predict_proba(featuresThickness)+m_rect_model.predict_proba(m_rect)
+            probabiliy += HOG_model.predict_proba(HOG)
+            # probabiliy += bw_model.predict_proba(bw)+bw_up_model.predict_proba(bw_up) +bw_down_model.predict_proba(bw_down)+d_up_model.predict_proba(d_up)+d_down_model.predict_proba(d_down)
             end = time.time()
             label = np.argmax(probabiliy, axis=1)+1
             result_text+=str(label[0])+'\n'

@@ -7,7 +7,7 @@ manuscript verification where we would like to know the origin of a manuscript.
 Forexample, if the manuscript is written in Andalusi font, it is most probably dates to the An-
 dalusian Era. If it were written in Demasqi font, it is most probably dates to the Abbasi Era.
 
-#### We use **(ACdb) Arabic Calligraphy Database** that containing 9 categories of computer printed Arabic text snippets:
+### We use **(ACdb) Arabic Calligraphy Database** that containing 9 categories of computer printed Arabic text snippets:
 - diwani
 - naskh
 - parsi
@@ -20,13 +20,17 @@ dalusian Era. If it were written in Demasqi font, it is most probably dates to t
 <br>
 dataset link: https://drive.google.com/file/d/1dC7pwzT_RHL9B42H8-Nzf5Sant-86NV6/view
 
-#### Machine learning pipeline contain the following modules:
+### Machine learning pipeline contain the following modules:
 - Pre-processing Module.
 - Feature Extraction/Selection Module.
 - Model Selection and Training Module.
 - Performance Analysis Module.
 
-#### Packeges:
+### Comparison between different models for the 9 categories:
+![alt](https://drive.google.com/uc?export=view&id=1CAmGDFjMo8DwZ38WrSD-dkUl47uxLy3n)
+![alt](https://drive.google.com/uc?export=view&id=1eOxWHkgOUSLSEgAbhAi7VxTt9PsXtqLC)
+
+### Packeges:
 - scikit-learn
 - scikit-image
 -	opencv
